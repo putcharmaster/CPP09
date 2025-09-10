@@ -1,0 +1,23 @@
+date | value
+# earlier than earliest CSV (should give "Error: bad input")
+2011-01-02 | 1
+
+# leap year valid
+2012-02-29 | 5
+
+# non-leap year invalid
+2011-02-29 | 5
+
+# zero is allowed
+2011-01-10 | 0
+
+# upper bound is allowed
+2011-01-10 | 1000
+
+# formatting should trim zeros
+2011-01-10 | 1000.0000
+
+# spacing variations
+2011-01-03|1
+2011-01-03   |   2
+2011-01-03 |3
