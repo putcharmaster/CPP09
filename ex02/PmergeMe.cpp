@@ -133,9 +133,15 @@ void PmergeMe::boundedInsertVector(std::vector<int>& chain, int value, int bound
 
 void PmergeMe::insertSmallsVector(std::vector<int>& chain, const std::vector<PairV>& pairs) {
     if (pairs.empty()) return;
+
     chain.clear();
     chain.reserve(pairs.size());
-    for (size_t i = 0; i < pairs.size(); ++i) chain.push_back(pairs[i].big);
+
+    // 1) Start the chain with all "big" elements in their (sorted-by-big) order
+    for (size_t i = 0; i < pairs.size(); ++i)
+        chain.push_back(pairs[i].big);
+
+    // 2) Insert "small" elements following Jacobsthal order (bounded binary insert)
     std::vector<size_t> order = jacobsthalOrder(pairs.size());
     for (size_t t = 0; t < order.size(); ++t) {
         size_t i = order[t];
@@ -143,7 +149,18 @@ void PmergeMe::insertSmallsVector(std::vector<int>& chain, const std::vector<Pai
         int bound = pairs[i].big;
         boundedInsertVector(chain, small, bound);
     }
+
+    // 3) SAFETY PASS: insert any remaining "small" elements that weren't scheduled
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        int small = pairs[i].small;
+        // if not already present, insert it bounded by its pair's big
+        if (std::find(chain.begin(), chain.end(), small) == chain.end()) {
+            int bound = pairs[i].big;
+            boundedInsertVector(chain, small, bound);
+        }
+    }
 }
+
 
 void PmergeMe::fordJohnsonVector(std::vector<int>& v) {
     if (v.size() <= 1) return;
@@ -212,8 +229,14 @@ void PmergeMe::boundedInsertDeque(std::deque<int>& chain, int value, int boundVa
 
 void PmergeMe::insertSmallsDeque(std::deque<int>& chain, const std::vector<PairD>& pairs) {
     if (pairs.empty()) return;
+
     chain.clear();
-    for (size_t i = 0; i < pairs.size(); ++i) chain.push_back(pairs[i].big);
+
+    // 1) Start the chain with all "big" elements in their (sorted-by-big) order
+    for (size_t i = 0; i < pairs.size(); ++i)
+        chain.push_back(pairs[i].big);
+
+    // 2) Insert "small" elements following Jacobsthal order (bounded binary insert)
     std::vector<size_t> order = jacobsthalOrder(pairs.size());
     for (size_t t = 0; t < order.size(); ++t) {
         size_t i = order[t];
@@ -221,7 +244,17 @@ void PmergeMe::insertSmallsDeque(std::deque<int>& chain, const std::vector<PairD
         int bound = pairs[i].big;
         boundedInsertDeque(chain, small, bound);
     }
+
+    // 3) SAFETY PASS: insert any remaining "small" elements that weren't scheduled
+    for (size_t i = 0; i < pairs.size(); ++i) {
+        int small = pairs[i].small;
+        if (std::find(chain.begin(), chain.end(), small) == chain.end()) {
+            int bound = pairs[i].big;
+            boundedInsertDeque(chain, small, bound);
+        }
+    }
 }
+
 
 void PmergeMe::fordJohnsonDeque(std::deque<int>& d) {
     if (d.size() <= 1) return;
